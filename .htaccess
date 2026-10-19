@@ -12,7 +12,7 @@ RewriteRule ^api(?:/.*)?$ api.php [QSA,L]
   Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 </IfModule>
 
-<FilesMatch "(?i)^(server\.mjs|php-router\.php|README(?:\..*)?|SYSTEM_REFERENCE\.md|package(?:-lock)?\.json|config(?:\.local|\.example)?\.php)$">
+<FilesMatch "(?i)^(server\.mjs|php-router\.php|README(?:\..*)?|SYSTEM_REFERENCE\.md|package(?:-lock)?\.json|schema\.sql|config(?:\.local|\.example)?\.php)$">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>

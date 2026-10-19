@@ -310,13 +310,13 @@
   $("composer-form").addEventListener("submit",async event=>{
     event.preventDefault();const content=$("note-content").value.trim();if(!content){$("composer-error").hidden=false;$("note-content").setAttribute("aria-invalid","true");$("note-content").focus();return;}$("composer-error").hidden=true;$("note-content").removeAttribute("aria-invalid");
     if(!remoteReady)await remoteLoadPromise;
-    const button=$("publish-button"),oldLabel=button.innerHTML;button.disabled=true;button.textContent="Sending your thoughtâ€¦";
+    const button=$("publish-button"),oldLabel=button.innerHTML;button.disabled=true;button.textContent="Publishing...";
     const author=$("note-author").value.trim().slice(0,40)||"Someone";localStorage.setItem(AUTHOR_KEY,author);
     const payload={title:$("note-title").value.trim(),content,category:$("note-category").value,anonymous:$("note-anonymous").checked,author};
-    try{let note;if(remoteMode){const response=await fetch("/api/notes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});if(!response.ok)throw new Error("Publish failed");note=await response.json();}else note={...payload,id:crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`,createdAt:Date.now(),likes:0};
+    try{let note;if(remoteMode){const response=await fetch("/api/notes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});if(!response.ok){const result=await response.json().catch(()=>null);throw new Error(result?.error||"The server could not save this note.");}note=await response.json();}else note={...payload,id:crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`,createdAt:Date.now(),likes:0};
       search.value="";const alreadyPresent=notes.some(item=>item.id===note.id);if(!alreadyPresent){notes.unshift(note);if(!remoteMode)saveLocal();launchArrival(note);}else{notes=notes.map(item=>item.id===note.id?note:item);render();}
       composer.close();showToast("Your thought has joined the universe.");
-    }catch{showToast("Couldnâ€™t publish your note. Please try again.");}finally{button.disabled=false;button.innerHTML=oldLabel;}
+    }catch(error){showToast(error instanceof Error?error.message:"The note could not be published. Please try again.");}finally{button.disabled=false;button.innerHTML=oldLabel;}
   });
   search.addEventListener("input",()=>{clearTimeout(discoveryTimer);discoveryId=null;render();});
   document.querySelectorAll(".filter-segment").forEach(button=>button.addEventListener("click",()=>{

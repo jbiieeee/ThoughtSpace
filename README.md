@@ -4,7 +4,7 @@ ThoughtSpace is a floating wall for sharing short thoughts. It includes search, 
 
 ## Upload to PHP hosting
 
-Upload the site files to your website's document root. The site needs PHP 8.1+ with PDO MySQL enabled and Apache `mod_rewrite` for the API routes in `.htaccess`. Import `schema.sql` into the database from your hosting panel, then copy `db-config.example.php` to `config.local.php` and enter the database host, exact database name, username, and a rotated password. Keep `config.local.php` out of Git; the `.gitignore` and `.htaccess` already exclude it.
+Upload the site files to your website's document root. The site needs PHP 8.1+ with PDO MySQL enabled and Apache `mod_rewrite` for the API routes in `.htaccess`. Configure `config.local.php` with the database host, exact database name, username, and a rotated password. The API creates the required tables automatically the first time it connects; the database user must have permission to create tables. `schema.sql` is also provided for a manual import if your host restricts table creation from PHP. Keep `config.local.php` out of Git; the `.gitignore` and `.htaccess` already exclude it.
 
 Production domain: <https://thoughtspace.ct.ws>. Point that domain to the site's document root in the hosting panel and enable its SSL certificate before relying on the HTTPS URL.
 

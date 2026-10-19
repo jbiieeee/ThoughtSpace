@@ -40,6 +40,9 @@ function database(): PDO
         || $config['username'] === '' || $port === false || $port < 1 || $port > 65535) {
         throw new RuntimeException('Database configuration is invalid.');
     }
+    if ($config['password'] === 'REPLACE_WITH_ROTATED_PASSWORD') {
+        throw new RuntimeException('Replace the database password in config.local.php.');
+    }
 
     $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $host, $port, $name);
     $connection = new PDO($dsn, (string)$config['username'], (string)$config['password'], [
@@ -47,7 +50,23 @@ function database(): PDO
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
+    ensure_database_schema($connection);
     return $connection;
+}
+
+function ensure_database_schema(PDO $db): void
+{
+    static $initialized = false;
+    if ($initialized) return;
+    $schemaPath = __DIR__ . DIRECTORY_SEPARATOR . 'schema.sql';
+    $schema = file_get_contents($schemaPath);
+    if ($schema === false) throw new RuntimeException('Unable to read schema.sql.');
+    $schema = preg_replace('/^\s*--.*$/m', '', $schema);
+    if (!is_string($schema)) throw new RuntimeException('Unable to parse schema.sql.');
+    foreach (array_filter(array_map('trim', explode(';', $schema))) as $statement) {
+        $db->exec($statement);
+    }
+    $initialized = true;
 }
 
 function public_note(array $note): array
@@ -260,6 +279,14 @@ try {
     }
     if (str_starts_with($path, '/api/')) json_response(404, ['error' => 'Not found.']);
     json_response(404, ['error' => 'Not found.']);
+} catch (PDOException $error) {
+    if (isset($db) && $db instanceof PDO && $db->inTransaction()) $db->rollBack();
+    error_log('ThoughtSpace API error: ' . $error->getMessage());
+    json_response(503, ['error' => 'Database connection or table setup failed. Check the MySQL credentials and that this database user can create tables.']);
+} catch (RuntimeException $error) {
+    if (isset($db) && $db instanceof PDO && $db->inTransaction()) $db->rollBack();
+    error_log('ThoughtSpace API setup error: ' . $error->getMessage());
+    json_response(503, ['error' => 'Database is not configured yet. Set the credentials in config.local.php and verify schema setup.']);
 } catch (Throwable $error) {
     if (isset($db) && $db instanceof PDO && $db->inTransaction()) $db->rollBack();
     error_log('ThoughtSpace API error: ' . $error->getMessage());
