@@ -49,6 +49,7 @@ function database(): PDO
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
+        PDO::ATTR_TIMEOUT => 5,
     ]);
     ensure_database_schema($connection);
     return $connection;
@@ -169,6 +170,9 @@ $path = rawurldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 try {
+    if ($path === '/api/health' && $method === 'GET') {
+        json_response(200, ['ok' => true, 'service' => 'ThoughtSpace API']);
+    }
     $db = database();
     if ($path === '/api/events' && $method === 'GET') stream_events();
 

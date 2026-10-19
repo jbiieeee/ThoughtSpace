@@ -6,6 +6,8 @@ Production domain: <https://thoughtspace.ct.ws>. Point that domain to the site's
 
 The PHP API uses PDO prepared statements and utf8mb4 MySQL tables for notes, likes, replies, and live-sync revision tracking. It supports publishing, likes, replies, and server-sent live synchronization; the browser refreshes the shared note collection when a change is detected and also checks periodically as a fallback.
 
+After upload, open `/api/health` to confirm the web server reaches PHP, then `/api/notes` to confirm database connectivity and first-run table creation.
+
 ## Security notes
 
 The wall is currently public: visitors can read notes and submit notes, likes, and replies. The PHP API validates request sizes and fields, rejects cross-origin browser writes, and stores data outside direct web access. These checks do not authenticate callers or prevent automated abuse; add an account or moderation policy before treating submissions as private or trusted. Use HTTPS in hosting settings.
