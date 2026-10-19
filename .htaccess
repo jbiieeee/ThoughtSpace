@@ -1,0 +1,25 @@
+DirectoryIndex index.html
+RewriteEngine On
+RewriteRule ^(?:\.git|\.svn|node_modules)(?:/|$) - [F,L,NC]
+RewriteRule ^data(?:/|$) - [F,L]
+RewriteRule ^api(?:/.*)?$ api.php [QSA,L]
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "DENY"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+</IfModule>
+
+<FilesMatch "(?i)^(server\.mjs|php-router\.php|README(?:\..*)?|SYSTEM_REFERENCE\.md|package(?:-lock)?\.json|config(?:\.local|\.example)?\.php)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+</FilesMatch>
+
+<IfModule mod_authz_core.c>
+  <FilesMatch "^\.">
+    Require all denied
+  </FilesMatch>
+</IfModule>

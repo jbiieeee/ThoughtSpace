@@ -1,4 +1,7 @@
 node_modules/
 data/notes.json
+data/notes.json.*
+data/notes.lock
+config.local.php
 npm-debug.log*
 .DS_Store
