@@ -1,0 +1,91 @@
+/* Viewport-aware layout refinements across phones, tablets, and large displays. */
+html { min-width: 320px; min-height: 100%; }
+body { min-width: 320px; min-height: 100%; overscroll-behavior: none; }
+.universe { min-width: 0; }
+.wall { contain: layout paint; }
+
+@media (min-width: 1600px) {
+  .search-wrap { width: min(560px, 36vw); }
+  .universe-map { width: 210px; }
+  .universe-map canvas { height: 104px; }
+}
+
+@media (max-width: 800px) {
+  .topbar {
+    height: calc(96px + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .brand { left: max(14px, env(safe-area-inset-left, 0px)); top: calc(12px + env(safe-area-inset-top, 0px)); }
+  .top-actions { top: calc(11px + env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); }
+  .search-wrap {
+    top: calc(52px + env(safe-area-inset-top, 0px)); left: max(14px, env(safe-area-inset-left, 0px)); right: max(14px, env(safe-area-inset-right, 0px));
+    width: auto; max-width: none; transform: none;
+  }
+  #universe { inset-block-start: calc(96px + env(safe-area-inset-top, 0px)); }
+  .detail-dialog { overscroll-behavior: contain; }
+}
+
+@media (max-width: 600px) {
+  .date-filter-control { right: max(8px, env(safe-area-inset-right, 0px)); }
+  .universe-navigation { top: 47px; right: max(8px, env(safe-area-inset-right, 0px)); }
+  .universe-map { left: max(8px, env(safe-area-inset-left, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px)); }
+  .universe-meta { left: max(8px, env(safe-area-inset-left, 0px)); bottom: calc(116px + env(safe-area-inset-bottom, 0px)); }
+  .discover-button { right: max(8px, env(safe-area-inset-right, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px)); }
+  .composer-dialog {
+    width: calc(100vw - 12px);
+    max-height: calc(100vh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    overscroll-behavior: contain;
+  }
+  .detail-dialog {
+    width: calc(100vw - 12px);
+    max-height: calc(100vh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    overflow: auto; overscroll-behavior: contain;
+  }
+  .reply-form-bottom { flex-wrap: wrap; }
+  .reply-identity { flex: 1 1 auto; }
+  .reply-form .button { min-height: 40px; }
+}
+
+@media (max-width: 380px) {
+  #write-button { width: 38px; min-width: 38px; padding: 0; }
+  #write-button span { display: none; }
+  .top-actions { gap: 7px; }
+  .brand { gap: 7px; font-size: 17px; }
+  .brand-mark { width: 30px; height: 30px; }
+  .search-wrap { left: 10px; right: 10px; }
+  .filter-segment { padding-inline: 7px; }
+  .universe-meta { transform: scale(.86); transform-origin: bottom left; }
+  .universe-map { width: 118px; }
+  .universe-map canvas { height: 58px; }
+  .composer-dialog .dialog-actions .button { padding-inline: 11px; }
+}
+
+@media (pointer: coarse) {
+  .universe-navigation button { min-width: 40px; height: 40px; }
+  .universe-map-heading button { width: 32px; height: 32px; }
+  .filter-segment { min-height: 32px; }
+  .discover-button, .top-actions .button { min-height: 42px; }
+  .note-card { -webkit-tap-highlight-color: transparent; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .universe-map { width: 126px; bottom: max(6px, env(safe-area-inset-bottom, 0px)); }
+  .universe-map canvas { height: 45px; }
+  .universe-meta { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); padding: 6px 9px; }
+  .universe-hint { display: none; }
+  .discover-button { bottom: max(7px, env(safe-area-inset-bottom, 0px)); }
+  .composer-dialog, .detail-dialog {
+    max-height: calc(100vh - 10px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 10px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+  .composer-dialog textarea { min-height: 92px; max-height: 20dvh; }
+  .composer-intro { margin-block-end: 10px; }
+  .composer-dialog .dialog-actions { padding-block: 8px max(8px, env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .publish-flight-card { display: none !important; }
+  .note-card, .universe-map, .universe-navigation button, .filter-segment { scroll-behavior: auto; }
+}

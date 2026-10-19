@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#061225" />
     <meta name="description" content="A live, floating universe of shared thoughts." />
     <link rel="canonical" href="https://thoughtspace.ct.ws/" />
@@ -17,6 +17,9 @@
     <link rel="stylesheet" href="conversation.css" />
     <link rel="stylesheet" href="design-system.css" />
     <link rel="stylesheet" href="composer.css" />
+    <link rel="stylesheet" href="navigation.css" />
+    <link rel="stylesheet" href="feedback.css" />
+    <link rel="stylesheet" href="responsive.css" />
     <script src="app.js" defer></script>
   </head>
   <body>
@@ -32,7 +35,7 @@
       </div>
       <div class="top-actions">
         <span class="live-indicator"><i></i><span id="live-label">Connecting</span></span>
-        <button class="button button-primary" id="write-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Share a thought</span></button>
+        <button class="button button-primary" id="write-button" aria-label="Share a thought"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Share a thought</span></button>
         <button class="avatar" id="profile-button" aria-label="Connection mode information" title="About this wall"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
       </div>
     </header>
@@ -48,6 +51,16 @@
         <button class="filter-segment is-active" type="button" data-filter="all" aria-pressed="true">All Notes</button>
         <select id="date-filter" class="date-filter" aria-label="Filter notes by date" hidden><option value="all" selected>All notes</option><option value="today">Today</option><option value="week">This week</option></select>
       </div>
+      <nav class="universe-navigation" aria-label="Universe navigation">
+        <button type="button" id="zoom-in" aria-label="Zoom in" title="Zoom in">+</button>
+        <button type="button" id="zoom-out" aria-label="Zoom out" title="Zoom out">−</button>
+        <button type="button" id="reset-view" aria-label="Reset view" title="Reset view">Reset</button>
+        <button type="button" id="recenter-view" aria-label="Recenter on recent thoughts" title="Recenter universe">◎</button>
+      </nav>
+      <section class="universe-map" aria-label="Universe overview">
+        <div class="universe-map-heading"><span>Universe map</span><button type="button" id="map-toggle" aria-expanded="true" aria-label="Collapse universe map">−</button></div>
+        <canvas id="universe-map-canvas" aria-label="Map of notes; click to navigate"></canvas>
+      </section>
       <div class="universe-meta"><span class="meta-orbit" aria-hidden="true"><i></i></span><span><strong id="note-count">0 notes</strong><small id="wall-caption">drifting through the universe</small></span></div>
       <div class="universe-hint" id="universe-hint"><span class="hint-star">✳</span> Pick a thought. See where it takes you.</div>
       <button class="discover-button" id="discover-button" type="button"><span aria-hidden="true">✧</span> Surprise me</button>
@@ -88,7 +101,7 @@
           </div>
           <label class="anonymous-toggle"><input id="note-anonymous" type="checkbox" /><span class="toggle-track"><i></i></span><span class="anonymous-copy"><strong>Post anonymously</strong><small>Your name won’t appear on this note</small></span></label>
         </div>
-        <div class="dialog-actions"><button type="button" class="button button-quiet close-dialog">Cancel</button><button type="submit" class="button button-primary" id="publish-button"><span>Publish note</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></button></div>
+        <div class="dialog-actions"><button type="button" class="button button-quiet close-dialog">Cancel</button><button type="submit" class="button button-primary" id="publish-button"><span class="action-label">Publish note</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></button></div>
       </form>
     </dialog>
 
@@ -104,7 +117,7 @@
         <div id="replies-list" class="replies-list" aria-live="polite"><div class="reply-loading">Loading replies…</div></div>
         <form id="reply-form" class="reply-form">
           <label class="sr-only" for="reply-content">Your reply</label><textarea id="reply-content" maxlength="500" rows="3" placeholder="Write a reply to this thought..."></textarea>
-          <div class="reply-form-bottom"><div class="reply-identity"><input id="reply-author" maxlength="40" placeholder="Your name" aria-label="Display name for your reply"/><label class="reply-anonymous"><input id="reply-anonymous" type="checkbox"/> Anonymous</label></div><button type="submit" class="button button-primary" id="send-reply">Send reply <span aria-hidden="true">↗</span></button></div>
+          <div class="reply-form-bottom"><div class="reply-identity"><input id="reply-author" maxlength="40" placeholder="Your name" aria-label="Display name for your reply"/><label class="reply-anonymous"><input id="reply-anonymous" type="checkbox"/> Anonymous</label></div><button type="submit" class="button button-primary" id="send-reply"><span class="action-label">Send reply</span><span aria-hidden="true">↗</span></button></div>
           <p class="reply-error" id="reply-error" role="status" hidden></p>
         </form>
       </section>

@@ -1,0 +1,41 @@
+/* Transaction feedback and cinematic publish arrival. */
+.button.is-loading { position: relative; cursor: progress; }
+.button.is-loading::before {
+  content: ""; width: 13px; height: 13px; flex: 0 0 13px; box-sizing: border-box;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: action-spin .72s linear infinite;
+}
+#publish-button.is-loading svg, #send-reply.is-loading .reply-arrow { display: none; }
+#send-reply.is-loading span[aria-hidden="true"] { display: none; }
+#publish-button.is-loading { min-width: 145px; }
+.publish-flight-card {
+  position: fixed; z-index: 10000; left: 0; top: 0; width: min(210px, 48vw); height: 132px;
+  display: flex; flex-direction: column; justify-content: center; gap: 8px; overflow: hidden;
+  padding: 17px 18px; border: 1px solid #ffffff8c; border-radius: 18px;
+  box-shadow: 0 20px 55px #02081770, inset 0 1px #ffffff9c;
+  transform-origin: center; pointer-events: none; will-change: transform, opacity;
+  color: #0b1630; background: linear-gradient(145deg,#ffffff,#eaf3ff);
+}
+.publish-flight-card strong, .publish-flight-card span { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.publish-flight-card strong { -webkit-line-clamp: 2; font: 800 15px/1.3 Manrope,sans-serif; }
+.publish-flight-card span { -webkit-line-clamp: 3; font: 500 11px/1.55 "DM Sans",sans-serif; opacity: .88; }
+.publish-flight-card.tone-navy, .publish-flight-card.tone-deep { color: #f7fbff; background: linear-gradient(145deg,#2563a6,#153e75 72%,#0b1630); }
+.publish-flight-card.tone-royal { color: #fff; background: linear-gradient(145deg,#4388f2,#2563eb 70%,#194fbd); }
+.publish-flight-card.tone-sky { background: linear-gradient(145deg,#e8f3ff,#bfdbfe); }
+.publish-flight-card.tone-ice, .publish-flight-card.tone-white { background: linear-gradient(145deg,#fff,#eaf3ff); }
+.note-card.publish-landed { animation: publish-landed 1.35s ease-out both; }
+.note-card.revealing { animation: note-reveal .3s ease-out both; }
+.reply-item.reply-arriving { animation: reply-arrive .42s cubic-bezier(.2,.8,.25,1) both; }
+.empty-state.is-fetching .empty-orb { position: relative; animation: loading-orb 2.4s ease-in-out infinite; }
+.empty-state.is-fetching .empty-orb::after { content: "✦"; position: absolute; margin: -25px 0 0 24px; color: #b9d8ff; font-size: 11px; animation: loading-star 1.8s ease-in-out infinite; }
+@keyframes action-spin { to { transform: rotate(360deg); } }
+@keyframes publish-landed { 0% { filter: brightness(1.3); box-shadow: 0 0 0 0 #8fc5ff88, 0 12px 32px #02081742; } 45% { filter: brightness(1.12); box-shadow: 0 0 0 8px #8fc5ff20, 0 16px 38px #02081755; } 100% { filter: none; } }
+@keyframes note-reveal { from { opacity: 0; scale: .96; } to { opacity: 1; scale: 1; } }
+@keyframes reply-arrive { from { opacity: 0; transform: translateY(9px) scale(.985); border-color: #60a5fa; } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes loading-orb { 50% { box-shadow: 0 0 0 16px #60a5fa0c, 0 14px 36px #0208174a, inset 0 1px #ffffff26; filter: brightness(1.16); } }
+@keyframes loading-star { 50% { opacity: .35; transform: scale(.72) rotate(30deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .button.is-loading::before, .empty-state.is-fetching .empty-orb, .empty-state.is-fetching .empty-orb::after { animation: none; }
+  .note-card.revealing, .note-card.publish-landed, .reply-item.reply-arriving { animation: none; }
+  .publish-flight-card { display: none; }
+}
