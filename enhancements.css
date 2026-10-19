@@ -1,0 +1,29 @@
+/* Living universe effects and motion refinement. */
+.universe{background:linear-gradient(132deg,#f7faff 0%,#eff8ff 38%,#f8fcff 67%,#f1f7ff 100%);background-size:180% 180%;animation:sky-breathe 42s ease-in-out infinite alternate}
+.particles{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.universe-glow{z-index:1;animation:ambient-drift 38s ease-in-out infinite alternate}
+.glow-b{animation-delay:-18s}.glow-c{animation-delay:-9s}
+.universe-meta,.universe-hint{z-index:8}
+.wall{z-index:3}
+.note-card{opacity:1;animation:none;transform-origin:center;transition:box-shadow .26s,border-color .26s,filter .24s,opacity .24s,scale .24s}
+.note-card.arriving{opacity:0;animation:note-arrive .78s cubic-bezier(.2,.8,.2,1) .04s forwards}
+.note-card:hover,.note-card:focus-visible{scale:1.035;box-shadow:0 18px 42px #1d4c8730,0 0 0 1px #7eadea70;border-color:#98baf0}
+.note-card::after{content:"Click to read";position:absolute;right:11px;top:10px;padding:5px 8px;border:1px solid #d9e8fb;border-radius:20px;background:#fffffff0;color:#4272b8;font-size:8px;font-weight:700;letter-spacing:.1px;opacity:0;transform:translateY(-3px);transition:opacity .2s,transform .2s;pointer-events:none}
+.note-card:hover::after,.note-card:focus-visible::after{opacity:1;transform:translateY(0)}
+.note-card.search-dim{opacity:.13!important;filter:saturate(.55);pointer-events:none}
+.note-card.search-match{opacity:1!important;border-color:#90b8f0;box-shadow:0 0 0 1px #c7defd,0 12px 30px #1d4c8718}
+.note-card.newest{border-color:#91b9f0;box-shadow:0 0 0 1px #cfe2ff,0 10px 32px #3878cf20}
+.note-card.newest::before{content:"";position:absolute;inset:-1px;border:1px solid #80aef0;border-radius:inherit;pointer-events:none;animation:new-note-glow 5s ease-out forwards}
+.universe.detail-open .note-card:not(.selected){opacity:.52}
+.entry-pulse{position:absolute;z-index:1;width:22px;height:22px;margin:-11px 0 0 -11px;border:1px solid #6fa6f4;border-radius:50%;background:#9fc9ff35;pointer-events:none;animation:entry-pulse .9s ease-out forwards}
+.entry-spark{position:absolute;z-index:1;width:4px;height:4px;margin:-2px;border-radius:50%;background:#8dc4ff;box-shadow:0 0 8px #69a5f8;pointer-events:none;animation:entry-spark .78s ease-out forwards}
+.spark-0{--sx:-27px;--sy:-10px}.spark-1{--sx:21px;--sy:-22px}.spark-2{--sx:31px;--sy:13px}.spark-3{--sx:-18px;--sy:25px}.spark-4{--sx:-33px;--sy:4px}
+.composer-dialog[open]{animation:dialog-in .24s ease-out}
+@keyframes note-arrive{0%{opacity:0;scale:.78;filter:blur(2px)}60%{opacity:1;filter:blur(0);scale:1.035}100%{opacity:1;scale:1;filter:blur(0)}}
+@keyframes entry-pulse{0%{opacity:.8;scale:.35}100%{opacity:0;scale:5.2}}
+@keyframes entry-spark{0%{opacity:.9;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(.25)}}
+@keyframes new-note-glow{0%{opacity:.65;box-shadow:0 0 0 0 #74a9f255}45%{opacity:.35;box-shadow:0 0 0 5px #74a9f220}100%{opacity:0;box-shadow:0 0 0 9px #74a9f200}}
+@keyframes ambient-drift{0%{translate:-4px 5px;scale:.98}100%{translate:8px -10px;scale:1.04}}
+@keyframes sky-breathe{0%{background-position:0% 30%}100%{background-position:100% 70%}}
+@media(max-width:700px){.universe{animation-duration:55s}.note-card::after{display:none}}
+@media(prefers-reduced-motion:reduce){.universe,.universe-glow,.note-card.newest::before{animation:none}.note-card.arriving{animation:none;opacity:1}.entry-pulse,.entry-spark{display:none}}
