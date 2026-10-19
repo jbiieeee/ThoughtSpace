@@ -1,6 +1,6 @@
-# Notezy
+# ThoughtSpace
 
-Notezy is a floating wall for sharing short public thoughts. Search and filter notes, then open them to like or reply.
+ThoughtSpace is a floating wall for sharing short public thoughts. Search and filter notes, then open them to like or reply.
 
 ## Run
 

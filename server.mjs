@@ -148,4 +148,4 @@ const server = createServer(async (req, res) => {
   }
 });
 
-server.listen(port, "0.0.0.0", () => console.log(`Notezy is running at http://localhost:${port}`));
+server.listen(port, "0.0.0.0", () => console.log(`ThoughtSpace is running at http://localhost:${port}`));
