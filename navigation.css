@@ -10,7 +10,6 @@
 .universe-map canvas{display:block;width:100%;height:92px;margin-top:5px;border-radius:9px;cursor:crosshair;touch-action:none}
 .universe-map.is-collapsed{width:132px}.universe-map.is-collapsed canvas{display:none}
 .universe,.wall{touch-action:none}.wall .note-card{transform-origin:center center}
-.particles{transform-origin:center center;will-change:transform}
 .universe.is-panning{cursor:grabbing}.universe:not(.is-panning) .wall{cursor:grab}.note-card{cursor:pointer}
 .wall.zoom-medium .note-card{width:168px;height:128px;min-height:128px;padding:9px 10px;border-radius:14px}
 .wall.zoom-medium .card-content{font-size:9px;line-height:1.35;-webkit-line-clamp:2}
