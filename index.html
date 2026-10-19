@@ -56,6 +56,8 @@
         <span class="empty-orb" aria-hidden="true">✳</span>
         <h1 id="empty-title">A little space for a first thought.</h1>
         <p id="empty-copy">Write a note and watch it drift into the universe.</p>
+        <button class="button button-quiet empty-recovery" id="empty-clear-search" type="button" hidden>Clear search</button>
+        <button class="button button-quiet empty-recovery" id="empty-view-all" type="button" hidden>View all notes</button>
         <button class="button button-primary" id="empty-write">Write the first note <span aria-hidden="true">↗</span></button>
       </div>
     </main>
@@ -73,6 +75,7 @@
         <div class="composer-identity-fields">
           <div class="composer-field"><label class="field-label" for="note-title">Title <span>Optional</span></label><input id="note-title" class="text-field title-field" maxlength="90" placeholder="A thought worth sharing" /></div>
           <div class="composer-field"><label class="field-label" for="note-author">Display name <span>Optional</span></label><input id="note-author" class="text-field title-field" maxlength="40" placeholder="Your name on the wall" /></div>
+          <div class="composer-field composer-recipient"><label class="field-label" for="note-recipient">To <span>Optional</span></label><input id="note-recipient" class="text-field title-field" maxlength="80" autocomplete="off" placeholder="Who is this thought for?" /></div>
         </div>
         <div class="composer-field composer-writing-field">
           <label class="field-label" for="note-content">Your note <span class="required-label">Required</span></label>
@@ -93,7 +96,7 @@
       <div class="detail-top"><span class="detail-category" id="detail-category"></span><div class="detail-actions"><button class="copy-button" id="detail-copy" aria-label="Copy note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg> Copy</button><button class="copy-button report-button" id="detail-report">Report</button><button class="icon-button close-dialog" aria-label="Close">×</button></div></div>
       <section class="original-note" aria-label="Original note">
         <div class="detail-author"><span class="author-avatar" id="detail-avatar"></span><span><strong id="detail-author"></strong><small id="detail-time"></small></span></div>
-        <h2 id="detail-title"></h2><p id="detail-content" class="detail-content"></p>
+        <h2 id="detail-title"></h2><p id="detail-recipient" class="detail-recipient" hidden></p><p id="detail-content" class="detail-content"></p>
         <div class="detail-social"><button class="detail-like" id="detail-like" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 8.7c0 4.1-8.4 9.2-8.4 9.2S3.6 12.8 3.6 8.7A4.1 4.1 0 0 1 12 6.8a4.1 4.1 0 0 1 8.4 1.9Z"/></svg><span>Like</span><strong id="detail-like-count">0</strong></button><span class="detail-reply-total"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8m-8 3h5"/></svg><span><strong id="detail-reply-total">0</strong> replies</span></span></div>
       </section>
       <section class="conversation" aria-label="Replies to this note">

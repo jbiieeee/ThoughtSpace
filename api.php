@@ -67,6 +67,8 @@ function ensure_database_schema(PDO $db): void
     foreach (array_filter(array_map('trim', explode(';', $schema))) as $statement) {
         $db->exec($statement);
     }
+    $recipientColumn = $db->query("SHOW COLUMNS FROM thoughtspace_notes LIKE 'recipient'")->fetch();
+    if (!$recipientColumn) $db->exec("ALTER TABLE thoughtspace_notes ADD COLUMN recipient VARCHAR(80) NOT NULL DEFAULT '' AFTER title");
     $initialized = true;
 }
 
@@ -177,7 +179,7 @@ try {
     if ($path === '/api/events' && $method === 'GET') stream_events();
 
     if ($path === '/api/notes' && $method === 'GET') {
-        $query = 'SELECT n.id, n.title, n.content, n.category, n.anonymous, n.author, n.created_at AS createdAt,
+        $query = 'SELECT n.id, n.title, n.recipient, n.content, n.category, n.anonymous, n.author, n.created_at AS createdAt,
                          (SELECT COUNT(*) FROM thoughtspace_likes l WHERE l.note_id = n.id) AS likes,
                          (SELECT COUNT(*) FROM thoughtspace_replies r WHERE r.note_id = n.id) AS replyCount
                   FROM thoughtspace_notes n ORDER BY n.created_at DESC, n.id DESC';
@@ -189,16 +191,18 @@ try {
         $data = request_data();
         $content = is_string($data['content'] ?? null) ? trim($data['content']) : '';
         $title = is_string($data['title'] ?? null) ? text_slice(trim($data['title']), 90) : '';
+        $recipient = is_string($data['recipient'] ?? null) ? trim($data['recipient']) : '';
         $author = is_string($data['author'] ?? null) ? text_slice(trim($data['author']), 40) : '';
         if ($author === '') $author = 'Someone';
         $category = in_array($data['category'] ?? '', CATEGORIES, true) ? $data['category'] : '';
+        if (text_length($recipient) > 80) json_response(400, ['error' => 'A recipient name must be 80 characters or fewer.']);
         if ($content === '' || text_length($content) > 500) json_response(400, ['error' => 'A note must contain 1 to 500 characters.']);
         $anonymous = ($data['anonymous'] ?? false) === true;
-        $note = ['id' => make_uuid(), 'title' => $title, 'content' => $content, 'category' => $category,
+        $note = ['id' => make_uuid(), 'title' => $title, 'recipient' => $recipient, 'content' => $content, 'category' => $category,
             'anonymous' => $anonymous, 'author' => $anonymous ? '' : $author, 'createdAt' => (int)floor(microtime(true) * 1000), 'likes' => 0, 'replyCount' => 0];
         $db->beginTransaction();
-        $insert = $db->prepare('INSERT INTO thoughtspace_notes (id, title, content, category, anonymous, author, created_at) VALUES (:id, :title, :content, :category, :anonymous, :author, :created_at)');
-        $insert->execute(['id' => $note['id'], 'title' => $note['title'], 'content' => $content, 'category' => $category,
+        $insert = $db->prepare('INSERT INTO thoughtspace_notes (id, title, recipient, content, category, anonymous, author, created_at) VALUES (:id, :title, :recipient, :content, :category, :anonymous, :author, :created_at)');
+        $insert->execute(['id' => $note['id'], 'title' => $note['title'], 'recipient' => $recipient, 'content' => $content, 'category' => $category,
             'anonymous' => (int)$anonymous, 'author' => $note['author'], 'created_at' => $note['createdAt']]);
         bump_revision($db);
         $db->commit();

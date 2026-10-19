@@ -53,6 +53,7 @@
 .composer-dialog .icon-button:hover { color: #153e75; background: #eaf3ff; border-color: #c4d8f2; transform: rotate(4deg); }
 .composer-intro { margin: 11px 28px 20px; color: #64748b; font-size: 12px; line-height: 1.55; }
 .composer-identity-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 28px; }
+.composer-recipient { grid-column: 1 / -1; }
 .composer-field { min-width: 0; }
 .composer-dialog .field-label { align-items: center; margin: 0 0 7px; color: #153e75; font-size: 11px; font-weight: 700; }
 .composer-dialog .field-label span { color: #8493a9; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .35px; }
@@ -141,6 +142,11 @@
 .composer-dialog #publish-button svg { width: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .composer-dialog #publish-button:disabled { filter: saturate(.75); opacity: .8; }
 .composer-dialog .button:focus-visible { outline: 3px solid #60a5fa; outline-offset: 3px; }
+.empty-recovery { margin: 0 4px; }
+.empty-state button[hidden] { display: none; }
+.card-recipient { display: block; max-width: 100%; margin: 5px 0 6px; overflow: hidden; border-radius: 6px; padding: 3px 6px; background: var(--tag-bg, #edf5ff); color: var(--tag-ink, #315b92); font-size: 9px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.detail-recipient { display: inline-flex; align-items: center; margin: -2px 0 4px; padding: 5px 9px; border: 1px solid #ffffff42; border-radius: 999px; background: #ffffff24; color: var(--detail-ink, #0b1630); font-size: 11px; font-weight: 700; }
+.detail-recipient[hidden] { display: none; }
 @keyframes composer-enter { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @media (max-width: 600px) {
   .composer-dialog { width: min(520px, calc(100% - 20px)); max-height: calc(100dvh - 18px); border-radius: 20px; }

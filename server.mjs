@@ -77,11 +77,13 @@ const server = createServer(async (req, res) => {
       const data = await bodyJson(req);
       const content = typeof data.content === "string" ? data.content.trim() : "";
       const title = typeof data.title === "string" ? data.title.trim().slice(0, 90) : "";
+      const recipient = typeof data.recipient === "string" ? data.recipient.trim() : "";
       const author = typeof data.author === "string" ? data.author.trim().slice(0, 40) || "Someone" : "Someone";
       const category = categories.has(data.category) ? data.category : "";
       if (!content || content.length > 500) return send(res, 400, { error: "A note must contain 1 to 500 characters." });
+      if ([...recipient].length > 80) return send(res, 400, { error: "A recipient name must be 80 characters or fewer." });
       const anonymous = data.anonymous === true;
-      const note = { id: randomUUID(), title, content, category, anonymous, author: anonymous ? "" : author, createdAt: Date.now(), likedBy: [], replies: [] };
+      const note = { id: randomUUID(), title, recipient, content, category, anonymous, author: anonymous ? "" : author, createdAt: Date.now(), likedBy: [], replies: [] };
       await mutateNotes(notes => { notes.unshift(note); return { note }; });
       broadcast("note:created", publicNote(note));
       return send(res, 201, publicNote(note));

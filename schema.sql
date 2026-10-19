@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS thoughtspace_notes (
   id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   title VARCHAR(90) NOT NULL DEFAULT '',
+  recipient VARCHAR(80) NOT NULL DEFAULT '',
   content VARCHAR(500) NOT NULL,
   category VARCHAR(32) NOT NULL DEFAULT '',
   anonymous TINYINT(1) NOT NULL DEFAULT 0,

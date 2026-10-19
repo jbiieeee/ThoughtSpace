@@ -30,7 +30,8 @@
   function readSession(key, fallback) { try { return JSON.parse(sessionStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
   function saveLocal() { localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); }
   function escapeHtml(value) { return String(value).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]); }
-  function authorName(note) { return note.anonymous ? "Someone, anonymously" : note.author || "Someone"; }
+  const anonymousIcon = '<svg class="anonymous-avatar-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.8 19c.7-3.1 2.8-4.8 6.2-4.8s5.5 1.7 6.2 4.8"/></svg>';
+  function authorName(note) { return note.anonymous ? "Anonymous" : note.author || "Someone"; }
   function matchesDate(note, filter) {
     if (filter === "all") return true;
     const stamp=Number(note.createdAt);if(!Number.isFinite(stamp))return false;
@@ -48,15 +49,19 @@
     const baseWidth=innerWidth<=390?166:mobile?184:tablet?216:250,baseHeight=innerWidth<=390?148:mobile?160:tablet?184:210;
     const minScale=mobile ? .4 : tablet ? .34 : .3,maxScale=mobile?1:1.12,baseFootprint=(baseWidth+18)*(baseHeight+18),occupancy=count*baseFootprint/area;
     const scale=Math.max(minScale,Math.min(maxScale,Math.sqrt(.56/Math.max(.02,occupancy))));
-    const normalized=(scale-minScale)/(maxScale-minScale),gap=Math.round((mobile?5:7)+normalized*(mobile?10:19));
-    const cardWidth=Math.max(mobile?98:112,baseWidth*scale),cardHeight=Math.max(mobile?86:94,baseHeight*scale);
-    const density=scale>=(mobile ? .98 : 1.02)?"few":scale>=.82?"moderate":scale>=.66?"many":"packed";
-    wall.style.setProperty("--adaptive-scale",scale.toFixed(3));wall.style.setProperty("--adaptive-card-width",`${cardWidth.toFixed(1)}px`);wall.style.setProperty("--adaptive-card-height",`${cardHeight.toFixed(1)}px`);
-    wall.style.setProperty("--adaptive-padding-y",`${Math.max(8,17*scale).toFixed(1)}px`);wall.style.setProperty("--adaptive-padding-x",`${Math.max(8,18*scale).toFixed(1)}px`);wall.style.setProperty("--adaptive-padding-bottom",`${Math.max(7,14*scale).toFixed(1)}px`);wall.style.setProperty("--adaptive-gap",`${gap}px`);wall.dataset.gap=String(gap);
+    const countLevel=count<=5?0:count<=15?1:count<=30?2:count<=60?3:count<=100?4:5;
+    const spaceLevel=scale>=.98?0:scale>=.82?1:scale>=.66?2:scale>=.5?3:scale>=.38?4:5;
+    const level=Math.max(countLevel,spaceLevel),density=["few","moderate","many","packed","galaxy","miniature"][level];
+    const normalized=(scale-minScale)/(maxScale-minScale),gap=level>=5?3:level===4?5:Math.round((mobile?5:7)+normalized*(mobile?10:19));
+    const regularWidth=Math.max(mobile?98:112,baseWidth*scale);
+    const cardWidth=level>=5?(mobile?52:tablet?56:60):level===4?Math.max(mobile?72:84,Math.min(108,regularWidth*.48)):regularWidth;
+    wall.style.setProperty("--adaptive-scale",scale.toFixed(3));wall.style.setProperty("--adaptive-card-width",`${cardWidth.toFixed(1)}px`);
+    const padding=level>=5?0:level===4?7:Math.max(8,17*scale);
+    wall.style.setProperty("--adaptive-padding-y",`${padding.toFixed(1)}px`);wall.style.setProperty("--adaptive-padding-x",`${(level>=5?0:level===4?8:Math.max(8,18*scale)).toFixed(1)}px`);wall.style.setProperty("--adaptive-padding-bottom",`${(level>=5?0:level===4?7:Math.max(7,14*scale)).toFixed(1)}px`);wall.style.setProperty("--adaptive-gap",`${gap}px`);wall.dataset.gap=String(gap);
     return{density,scale,gap};
   }
   function spacingForDensity(){return Number(wall.dataset.gap)||6;}
-  function targetFlow(){if(wall.dataset.density==="packed")return .88;if(wall.dataset.density==="many")return .68;if(wall.dataset.density==="moderate")return .48;return .3;}
+  function targetFlow(){const density=wall.dataset.density;if(density==="miniature")return .18;if(density==="galaxy")return .28;if(density==="packed")return .72;if(density==="many")return .58;if(density==="moderate")return .42;return .3;}
   function timeAgo(value) {
     const diff = Math.max(0, Date.now() - Number(value)), minutes = Math.floor(diff / 60000);
     if (minutes < 1) return "just now";
@@ -68,17 +73,18 @@
   function showToast(message) { toast.textContent = message; toast.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("show"), 2400); }
   function setConnection(state, label) { const item = document.querySelector(".live-indicator"); item.className = `live-indicator ${state}`; $("live-label").textContent = label; }
   function visibleNotes() { return notes.filter(note => !hidden.has(note.id)); }
-  function matches(note, query) { return [note.title, note.content, note.author, note.category, note.anonymous ? "anonymous" : ""].join(" ").toLocaleLowerCase().includes(query); }
-  function sizeClass(note) { const length = (note.title || "").length + (note.content || "").length; return length < 100 ? "size-small" : length > 270 ? "size-large" : "size-medium"; }
+  function matches(note, query) { return [note.title, note.content, note.author, note.recipient, note.category, note.anonymous ? "anonymous" : ""].join(" ").toLocaleLowerCase().includes(query); }
+  function sizeClass(note) { const length = (note.title || "").length + (note.content || "").length + (note.recipient || "").length; return length < 100 ? "size-small" : length > 270 ? "size-large" : "size-medium"; }
   function depthLayer(id) { const band=seed(id)%10;return band<3?"background":band<8?"middle":"foreground"; }
 
   function cardBody(note) {
-    const author = authorName(note), avatar = note.anonymous ? "âœ³" : (author.trim().charAt(0).toUpperCase() || "â€¢");
+    const author = authorName(note), avatar = note.anonymous ? anonymousIcon : escapeHtml(author.trim().charAt(0).toUpperCase() || "•");
     const title = note.title ? `<h3 class="card-title">${escapeHtml(note.title)}</h3>` : "";
     const category = note.category ? `<span class="category-tag">${escapeHtml(note.category)}</span>` : "<span></span>";
     const createdAt = Number(note.createdAt) || Date.now();
-    return `<div class="card-top">${category}<time class="note-time" datetime="${new Date(createdAt).toISOString()}">${timeAgo(createdAt)}</time></div>${title}<p class="card-content${title ? "" : " no-title"}">${escapeHtml(note.content)}</p><span class="card-spacer"></span>
-      <div class="card-footer"><div class="author-line"><span class="author-avatar${note.anonymous ? " anonymous" : ""}">${escapeHtml(avatar)}</span><span class="author-name">${escapeHtml(author)}</span></div></div>`;
+    const recipient = note.recipient ? `<span class="card-recipient">To: ${escapeHtml(note.recipient)}</span>` : "";
+    return `<span class="galaxy-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.8 14.5 9.5 21.2 12l-6.7 2.5L12 21.2l-2.5-6.7L2.8 12l6.7-2.5L12 2.8Z"/></svg></span><div class="card-top">${category}<time class="note-time" datetime="${new Date(createdAt).toISOString()}">${timeAgo(createdAt)}</time></div>${title}${recipient}<p class="card-content${title ? "" : " no-title"}">${escapeHtml(note.content)}</p>
+      <div class="card-footer"><div class="author-line"><span class="author-avatar${note.anonymous ? " anonymous" : ""}">${avatar}</span><span class="author-name">${escapeHtml(author)}</span></div></div>`;
   }
   function ensureCard(note, index, query) {
     let card = cardRegistry.get(note.id), created = !card;
@@ -90,8 +96,10 @@
       card.tabIndex = 0;
       cardRegistry.set(note.id, card);
       resizeObserver.observe(card);
-      card.onpointerenter = () => { const item = motion.get(note.id); if (item) item.hovered = true; };
-      card.onpointerleave = () => { const item = motion.get(note.id); if (item) item.hovered = false; };
+      card.onpointerenter = () => { const item = motion.get(note.id); if (item) item.hovered = true; card.style.zIndex = "20"; };
+      card.onpointerleave = () => { const item = motion.get(note.id); if (item) item.hovered = card.matches(":focus-visible"); if (!card.matches(":focus-visible")) card.style.zIndex = String(depthLayer(note.id) === "foreground" ? 6 : depthLayer(note.id) === "middle" ? 4 : 2); };
+      card.onfocus = () => { const item = motion.get(note.id); if (item) item.hovered = true; card.style.zIndex = "20"; };
+      card.onblur = () => { const item = motion.get(note.id); if (item) item.hovered = card.matches(":hover"); if (!card.matches(":hover")) card.style.zIndex = String(depthLayer(note.id) === "foreground" ? 6 : depthLayer(note.id) === "middle" ? 4 : 2); };
       card.addEventListener("animationend", event => {
         if (event.animationName === "note-arrive") {
           card.classList.remove("arriving");
@@ -106,32 +114,60 @@
     const stillArriving = arrivalIds.has(note.id) && (created || card.classList.contains("arriving"));
     const layer=depthLayer(note.id);
     card.className = `note-card ${sizeClass(note)} layer-${layer} ${tones[seed(note.id) % tones.length]}${stillArriving ? " arriving" : ""}${arrivalIds.has(note.id) ? " newest" : ""}${discoveryId === note.id ? " discovered" : ""}${query ? (isMatch ? " search-match" : " search-dim") : ""}${selectedId === note.id ? " selected" : ""}`;
-    card.setAttribute("aria-label", `Note${note.title ? `: ${note.title}` : ""}. Press Enter to read.`);
+    card.setAttribute("aria-label", `Note${note.title ? `: ${note.title}` : ""}${note.recipient ? ` for ${note.recipient}` : ""}. Press Enter to read.`);
     card.style.zIndex = String(layer === "foreground" ? 6 : layer === "middle" ? 4 : 2);
     card.innerHTML = cardBody(note);
     if (created && !card.parentElement) wall.append(card);
     if (restoreFocus) card.querySelector(`[data-action="${restoreFocus}"]`)?.focus();
     return card;
   }
+  function canvasNotes(pool){
+    const limit=innerWidth<=520?80:innerWidth<=900?140:220;
+    if(pool.length<=limit)return pool;
+    const byId=new Map(pool.map(note=>[note.id,note])),chosen=new Set();
+    for(const id of [selectedId,discoveryId,pool[0]?.id,...arrivalIds])if(id&&byId.has(id)&&chosen.size<limit)chosen.add(id);
+    const remaining=pool.filter(note=>!chosen.has(note.id)).map(note=>({note,rank:seed(note.id)})).sort((a,b)=>a.rank-b.rank);
+    for(const item of remaining){if(chosen.size>=limit)break;chosen.add(item.note.id);}
+    return pool.filter(note=>chosen.has(note.id));
+  }
   function render() {
     const query = search.value.trim().toLocaleLowerCase(),pool=filteredNotes(),layout=layoutFor(pool.length),density=layout.density;
-    wall.dataset.density=density;wall.classList.remove("density-few","density-moderate","density-many","density-packed");wall.classList.add(`density-${density}`);
-    const shown=pool;
+    wall.dataset.density=density;wall.classList.remove("density-few","density-moderate","density-many","density-packed","density-galaxy","density-miniature");wall.classList.add(`density-${density}`);
+    const shown=canvasNotes(pool);
     const shownIds = new Set(shown.map(note => note.id));
     for (const [id, card] of cardRegistry) if (!shownIds.has(id)) { resizeObserver.unobserve(card);card.remove();cardRegistry.delete(id); }
     shown.forEach((note, index) => ensureCard(note, index, query));
     $("note-count").textContent = `${pool.length} ${pool.length === 1 ? "note" : "notes"}`;
     $("discover-button").disabled = pool.length === 0;
     const dateLabel={today:"Today",week:"This week",all:"All notes"}[$("date-filter").value];
-    $("wall-caption").textContent=query?`${dateLabel} · ${pool.length} matching thought${pool.length===1?"":"s"}`:dateLabel==="All notes"?"drifting through the universe":`${dateLabel} · ${pool.length} ${pool.length===1?"thought":"thoughts"}`;
+    $("wall-caption").textContent=shown.length<pool.length?`Showing ${shown.length} of ${pool.length} · search or Surprise me to explore`:query?`${dateLabel} · ${pool.length} matching thought${pool.length===1?"":"s"}`:dateLabel==="All notes"?"drifting through the universe":`${dateLabel} · ${pool.length} ${pool.length===1?"thought":"thoughts"}`;
     $("universe-hint").hidden = pool.length === 0 || Boolean(query)||$("date-filter").value!=="all";
     const noResults = pool.length === 0, empty = $("empty-state");
     empty.hidden = remoteReady && !noResults;
-    empty.classList.toggle("search-empty", Boolean(query)||$("date-filter").value!=="all");
-    $("empty-title").textContent = !remoteReady ? "Finding the floating thoughtsâ€¦" : query ? `No thoughts match â€œ${search.value.trim()}â€.` : $("date-filter").value==="today"?"No thoughts from today yet.":$("date-filter").value==="week"?"No thoughts from this week yet.":"A little space for a first thought.";
-    $("empty-copy").textContent = !remoteReady ? "Connecting to the shared universe." : query||$("date-filter").value!=="all" ? "Try another search or date filter." : "Write a note and watch it drift into the universe.";
-    $("empty-write").hidden = !remoteReady || Boolean(query) || $("date-filter").value!=="all" || pool.length > 0;
-    for (const id of motion.keys()) if (!notes.some(note => note.id === id)) motion.delete(id);
+    const filter = $("date-filter").value;
+    const disconnected = remoteMode && !document.querySelector(".live-indicator").classList.contains("connected");
+    const initialEmpty = visibleNotes().length === 0 && !query && filter === "all";
+    empty.classList.toggle("search-empty", Boolean(query)||filter!=="all");
+    if (!remoteReady || disconnected) {
+      $("empty-title").textContent = disconnected ? "Reconnecting to the shared wall" : "Finding the floating thoughts...";
+      $("empty-copy").textContent = disconnected ? "The shared wall is temporarily unavailable. Your search will update when the connection returns." : "Connecting to the shared universe.";
+    } else if (initialEmpty) {
+      $("empty-title").textContent = "No thoughts here yet.";
+      $("empty-copy").textContent = "Be the first to share something with the universe.";
+    } else if (query) {
+      $("empty-title").textContent = "No thoughts found";
+      $("empty-copy").textContent = "We couldn't find any notes matching your search.";
+    } else if (filter === "today" || filter === "week") {
+      $("empty-title").textContent = filter === "today" ? "No thoughts for today" : "No thoughts for this week";
+      $("empty-copy").textContent = "Try exploring notes from another time.";
+    } else {
+      $("empty-title").textContent = "No thoughts here yet.";
+      $("empty-copy").textContent = "Be the first to share something with the universe.";
+    }
+    $("empty-write").hidden = !remoteReady || disconnected || !initialEmpty;
+    $("empty-clear-search").hidden = !remoteReady || disconnected || !query;
+    $("empty-view-all").hidden = !remoteReady || disconnected || Boolean(query) || filter === "all";
+    for (const id of motion.keys()) if (!shownIds.has(id) && id !== selectedId) motion.delete(id);
     if(detailOpen&&activeConversationId){const active=notes.find(note=>note.id===activeConversationId);if(active){currentDetail=active;updateDetailCounts(active);}}
     setupCards(); wall.setAttribute("aria-busy", String(!remoteReady));
     if(reducedMotion.matches){flowAmount=targetFlow();drawParticles(0,0);}
@@ -145,7 +181,7 @@
     const maxX=Math.max(0,bounds.width-w),maxY=Math.max(0,bounds.height-h-62);
     const entering=arrivalIds.has(note.id),gap=spacingForDensity(),others=[...cardRegistry.keys()].filter(id=>id!==note.id).map(id=>motion.get(id)).filter(Boolean);
     let x=0,y=12,best=Infinity;
-    const placementAttempts=others.length>160?6:others.length>80?12:52;
+    const placementAttempts=others.length>160?6:others.length>80?12:72;
     for(let attempt=0;attempt<placementAttempts;attempt++){
       const candidateX=entering?Math.max(0,Math.min(maxX,bounds.width*.49-w/2+(random()-.5)*Math.min(260,bounds.width*.48))):random()*maxX;
       const candidateY=entering?Math.max(12,Math.min(maxY,bounds.height*.47-h/2+(random()-.5)*Math.min(210,bounds.height*.42))):12+random()*Math.max(1,maxY-12);
@@ -153,7 +189,7 @@
       for(const other of others){const ox=(w+other.w)/2+gap-Math.abs((candidateX+w/2)-(other.x+other.w/2)),oy=(h+other.h)/2+gap-Math.abs((candidateY+h/2)-(other.y+other.h/2));if(ox>0&&oy>0)overlap+=ox*oy;}
       if(overlap<best){best=overlap;x=candidateX;y=candidateY;}if(overlap===0)break;
     }
-    const layer=depthLayer(note.id),angle=random()*Math.PI*2,layerSpeed=layer==="background" ? .72 : layer==="foreground" ? 1.22 : 1,speed=12+random()*11;
+    const layer=depthLayer(note.id),angle=random()*Math.PI*2,layerSpeed=layer==="background" ? .72 : layer==="foreground" ? 1.22 : 1,speed=14+random()*12;
     const depth=layer==="background" ? .91+random()*.035 : layer==="foreground" ? 1.025+random()*.035 : .965+random()*.055;
     const rotation=layer==="background" ? .3 : layer==="foreground" ? .72 : .52,baseVx=Math.cos(angle)*speed*layerSpeed,baseVy=Math.sin(angle)*speed*layerSpeed;
     return{x,y,vx:baseVx,vy:baseVy,baseVx,baseVy,sepX:0,sepY:0,targetSepX:0,targetSepY:0,w,h,rot:(random()-.5)*rotation,phase:random()*6.28,flowPhase:random()*6.28,flowRate:.17+random()*.2,driftRate:.2+random()*.25,driftX:6+random()*7,driftY:5+random()*7,turnRate:.18+random()*.2,depth,layer,hovered:false,interaction:1,born:arrivalIds.has(note.id)?performance.now():0};
@@ -203,15 +239,17 @@
     return nearStart*nearStart*(.35+nearStart*.65)*strength-nearEnd*nearEnd*(.35+nearEnd*.65)*strength;
   }
   function updateSeparation(items,gap,density){
-    const widths=items.map(item=>item.w),heights=items.map(item=>item.h),maxDimension=Math.max(140,...widths,...heights),cellSize=maxDimension+gap+96,softRange=52+gap*1.8;
+    const widths=items.map(item=>item.w),heights=items.map(item=>item.h),maxDimension=Math.max(48,...widths,...heights),cellSize=maxDimension+gap+64,softRange=38+gap*1.6;
     const buckets=new Map(),order=new Map(items.map((item,index)=>[item,index]));
     for(const item of items){item.targetSepX=0;item.targetSepY=0;const cx=Math.floor((item.x+item.w/2)/cellSize),cy=Math.floor((item.y+item.h/2)/cellSize),key=`${cx},${cy}`;if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(item);}
-    const crowdFactor=density==="packed" ? 1 : density==="many" ? .82 : density==="moderate" ? .58 : .34;
+    const crowdFactor=density==="miniature"?.2:density==="galaxy"?.34:density==="packed"?.86:density==="many"?.72:density==="moderate"?.54:.34;
+    const neighborLimit=density==="miniature"?18:density==="galaxy"?30:56;
     for(const a of items){
       const ax=Math.floor((a.x+a.w/2)/cellSize),ay=Math.floor((a.y+a.h/2)/cellSize);
-      for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
+      let checked=0;
+      neighborSearch:for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
         const neighbors=buckets.get(`${ax+ox},${ay+oy}`);if(!neighbors)continue;
-        for(const b of neighbors){if(order.get(b)<=order.get(a))continue;
+        for(const b of neighbors){if(order.get(b)<=order.get(a))continue;if(checked++>=neighborLimit)break neighborSearch;
           const dx=(b.x+b.w/2)-(a.x+a.w/2),dy=(b.y+b.h/2)-(a.y+a.h/2),absX=Math.abs(dx),absY=Math.abs(dy);
           const clearX=absX-(a.w+b.w)/2,clearY=absY-(a.h+b.h)/2;
           if(clearX>=softRange||clearY>=softRange)continue;
@@ -231,8 +269,9 @@
     frameId=0;if(document.hidden)return;
     const dt=reducedMotion.matches?0:Math.min(.05,(now-lastFrame)/1000||.016);lastFrame=now;
     if(!reducedMotion.matches){
-      const rect=wall.getBoundingClientRect(), items=[...cardRegistry.keys()].map(id=>motion.get(id)).filter(Boolean), t=now/1000,flow=.48+flowAmount*.82,density=wall.dataset.density,densitySpeed=density==="packed" ? .78 : density==="many" ? .88 : density==="moderate" ? .96 : 1;
-      if(now-lastCollisionAt>144){lastCollisionAt=now;updateSeparation(items,spacingForDensity(),density);}
+      const rect=wall.getBoundingClientRect(), items=[...cardRegistry.keys()].map(id=>motion.get(id)).filter(Boolean), t=now/1000,flow=.48+flowAmount*.82,density=wall.dataset.density,densitySpeed=density==="miniature"?.5:density==="galaxy"?.68:density==="packed"?.82:density==="many"?.9:density==="moderate"?.98:1.04;
+      const collisionInterval=items.length>180?320:items.length>100?220:144;
+      if(now-lastCollisionAt>collisionInterval){lastCollisionAt=now;updateSeparation(items,spacingForDensity(),density);}
       for(const item of items){
         const selected=detailOpen&&item===motion.get(selectedId),targetInteraction=item.hovered ? 0 : selected ? 0 : detailOpen ? .32 : 1;
         item.interaction+=(targetInteraction-item.interaction)*Math.min(1,dt*4.2);
@@ -252,7 +291,7 @@
         if(item.x<0){item.x=0;item.vx=Math.max(0,item.vx);}else if(item.x>maxX){item.x=maxX;item.vx=Math.min(0,item.vx);}
         if(item.y<0){item.y=0;item.vy=Math.max(0,item.vy);}else if(item.y>maxY){item.y=maxY;item.vy=Math.min(0,item.vy);}
       }
-      const rotationFactor=density==="packed" ? .25 : density==="many" ? .45 : density==="moderate" ? .72 : 1;
+      const rotationFactor=density==="miniature"?.12:density==="galaxy"?.2:density==="packed"?.25:density==="many"?.4:density==="moderate"?.68:1;
       for(const [id,card] of cardRegistry){const item=motion.get(id);if(!item)continue;let px=0,py=0;if(pointer.active){const cx=item.x+item.w/2,cy=item.y+item.h/2,dx=cx-pointer.x,dy=cy-pointer.y,distance=Math.hypot(dx,dy);if(distance<230&&distance>1){const amount=(1-distance/230)*5*item.depth;px=dx/distance*amount;py=dy/distance*amount;}}const scale=item.depth+Math.sin(t*.4+item.phase)*.003,swayAmplitude=item.layer==="foreground"?.62:item.layer==="background"?.22:.4,sway=Math.sin(t*item.turnRate*.8+item.flowPhase)*swayAmplitude*rotationFactor*item.interaction;card.style.transform=`translate3d(${(item.x+px).toFixed(1)}px,${(item.y+py).toFixed(1)}px,0) rotate(${(item.rot*rotationFactor+sway).toFixed(2)}deg) scale(${scale.toFixed(3)})`;}
     }
     flowAmount+=(targetFlow()-flowAmount)*Math.min(1,dt*1.35);
@@ -272,7 +311,7 @@
     currentDetail=note;selectedId=note.id;activeConversationId=note.id;detailOpen=true;universe.classList.add("detail-open");
     detail.dataset.tone=tones[seed(note.id)%tones.length];
     const rect=card.getBoundingClientRect();detail.style.setProperty("--origin-x",`${rect.left+rect.width/2-innerWidth/2}px`);detail.style.setProperty("--origin-y",`${rect.top+rect.height/2-innerHeight/2}px`);card.classList.add("selected");
-    $("detail-category").textContent=note.category||"A thought";$("detail-title").textContent=note.title||"A thought from the wall";$("detail-content").textContent=note.content;$("detail-author").textContent=authorName(note);$("detail-avatar").textContent=note.anonymous?"âœ³":authorName(note).charAt(0)||"â€¢";$("detail-time").textContent=new Date(Number(note.createdAt)||Date.now()).toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"});updateDetailCounts(note);
+    $("detail-category").textContent=note.category||"A thought";$("detail-title").textContent=note.title||"A thought from the wall";$("detail-recipient").textContent=note.recipient?`To: ${note.recipient}`:"";$("detail-recipient").hidden=!note.recipient;$("detail-content").textContent=note.content;$("detail-author").textContent=authorName(note);const detailAvatar=$("detail-avatar");detailAvatar.classList.toggle("anonymous",Boolean(note.anonymous));if(note.anonymous)detailAvatar.innerHTML=anonymousIcon;else detailAvatar.textContent=authorName(note).trim().charAt(0).toUpperCase()||"•";$("detail-time").textContent=new Date(Number(note.createdAt)||Date.now()).toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"});updateDetailCounts(note);
     $("reply-form").hidden=false;$("reply-error").hidden=true;$("reply-author").value=localStorage.getItem(AUTHOR_KEY)||"";$("reply-anonymous").checked=false;$("reply-content").value=replyDrafts.get(note.id)||"";
     renderReplies(note.id,replyCache.has(note.id)?"ready":"loading");detail.showModal();loadReplies(note);
   }
@@ -302,6 +341,8 @@
   function closeDetail(){if(detail.open){if(detail.classList.contains("closing"))return;detail.classList.add("closing");detailCloseTimer=setTimeout(()=>{detail.classList.remove("closing");detail.close();},260);return;}detailOpen=false;universe.classList.remove("detail-open");if(selectedId)cardRegistry.get(selectedId)?.classList.remove("selected");selectedId=null;currentDetail=null;activeConversationId=null;startMotion();}
 
   $("write-button").addEventListener("click",openComposer);$("empty-write").addEventListener("click",openComposer);
+  $("empty-clear-search").addEventListener("click",()=>{search.value="";search.focus();render();});
+  $("empty-view-all").addEventListener("click",()=>{$("date-filter").value="all";$("date-filter").dispatchEvent(new Event("change",{bubbles:true}));});
   document.querySelectorAll(".close-dialog").forEach(button=>button.addEventListener("click",()=>button.closest("dialog").id==="detail-dialog"?closeDetail():button.closest("dialog").close()));
   [composer,detail].forEach(dialog=>dialog.addEventListener("click",event=>{if(event.target===dialog){if(dialog===detail)closeDetail();else dialog.close();}}));
   detail.addEventListener("cancel",event=>{event.preventDefault();closeDetail();});
@@ -312,7 +353,8 @@
     if(!remoteReady)await remoteLoadPromise;
     const button=$("publish-button"),oldLabel=button.innerHTML;button.disabled=true;button.textContent="Publishing...";
     const author=$("note-author").value.trim().slice(0,40)||"Someone";localStorage.setItem(AUTHOR_KEY,author);
-    const payload={title:$("note-title").value.trim(),content,category:$("note-category").value,anonymous:$("note-anonymous").checked,author};
+    const recipient=$("note-recipient").value.trim().slice(0,80);
+    const payload={title:$("note-title").value.trim(),content,category:$("note-category").value,anonymous:$("note-anonymous").checked,author,recipient};
     try{let note;if(remoteMode){const response=await fetch("/api/notes",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});if(!response.ok){const result=await response.json().catch(()=>null);throw new Error(result?.error||"The server could not save this note.");}note=await response.json();}else note={...payload,id:crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`,createdAt:Date.now(),likes:0};
       search.value="";const alreadyPresent=notes.some(item=>item.id===note.id);if(!alreadyPresent){notes.unshift(note);if(!remoteMode)saveLocal();launchArrival(note);}else{notes=notes.map(item=>item.id===note.id?note:item);render();}
       composer.close();showToast("Your thought has joined the universe.");
@@ -365,7 +407,7 @@
     const recent=new Set(discoveryHistory.slice(-Math.min(3,pool.length-1))),choices=pool.filter(note=>!recent.has(note.id));
     const chosen=(choices.length?choices:pool)[Math.floor(Math.random()*(choices.length||pool.length))];
     discoveryHistory.push(chosen.id);discoveryHistory=discoveryHistory.slice(-3);discoveryId=chosen.id;render();const card=cardRegistry.get(chosen.id),item=motion.get(chosen.id);if(item)emitPulse(item.x+item.w/2,item.y+item.h/2);showToast("A thought found you.");clearTimeout(discoveryTimer);
-    discoveryTimer=setTimeout(()=>{if(!filteredNotes().some(note=>note.id===chosen.id)){discoveryId=null;render();return;}discoveryId=null;render();const current=cardRegistry.get(chosen.id);if(current){current.classList.add("discovered");openDetail(chosen,current);setTimeout(()=>current.classList.remove("discovered"),2800);}},700);
+    discoveryTimer=setTimeout(()=>{if(!filteredNotes().some(note=>note.id===chosen.id)){discoveryId=null;render();return;}discoveryId=null;selectedId=chosen.id;render();const current=cardRegistry.get(chosen.id);if(current){current.classList.add("discovered");openDetail(chosen,current);setTimeout(()=>current.classList.remove("discovered"),2800);}else{selectedId=null;render();}},700);
   });
   $("replies-list").addEventListener("click",event=>{if(event.target?.id==="retry-replies"&&currentDetail)loadReplies(currentDetail);});
   $("detail-copy").addEventListener("click",async()=>{if(!currentDetail)return;try{await navigator.clipboard.writeText([currentDetail.title,currentDetail.content].filter(Boolean).join("\n\n"));showToast("Copied to clipboard.");}catch{showToast("Clipboard access isnâ€™t available here.");}});
